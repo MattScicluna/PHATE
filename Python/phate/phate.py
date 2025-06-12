@@ -832,6 +832,7 @@ class PHATE(BaseEstimator):
                     knn_max=self.knn_max,
                     decay=self.decay,
                     thresh=1e-4,
+                    #thresh=1e-20,
                     n_jobs=self.n_jobs,
                     verbose=self.verbose,
                     random_state=self.random_state,
@@ -842,7 +843,7 @@ class PHATE(BaseEstimator):
         self.diff_op
         return self
 
-    def transform(self, X=None, t_max=100, plot_optimal_t=False, ax=None):
+    def transform(self, X=None, t_max=100, plot_optimal_t=False, ax=None, **mds_kwargs):
         """Computes the position of the cells in the embedding space
 
         Parameters
@@ -896,7 +897,7 @@ class PHATE(BaseEstimator):
                 )
             else:
                 if self.embedding is None:
-                    self.transform()
+                    self.transform(**mds_kwargs)
                 transitions = self.graph.extend_to_data(X)
                 return self.graph.interpolate(self.embedding, transitions)
         else:
@@ -914,6 +915,7 @@ class PHATE(BaseEstimator):
                         n_jobs=self.n_jobs,
                         seed=self.random_state,
                         verbose=max(self.verbose - 1, 0),
+                        **mds_kwargs
                     )
             if isinstance(self.graph, graphtools.graphs.LandmarkGraph):
                 _logger.debug("Extending to original data...")

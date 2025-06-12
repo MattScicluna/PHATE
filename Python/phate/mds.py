@@ -54,7 +54,7 @@ def classic(D, n_components=2, random_state=None):
 
 
 @scprep.utils._with_pkg(pkg="s_gd2", min_version="1.3")
-def sgd(D, n_components=2, random_state=None, init=None):
+def sgd(D, n_components=2, random_state=None, init=None, **mds_kwargs):
     """Metric MDS using stochastic gradient descent
 
     Parameters
@@ -81,9 +81,9 @@ def sgd(D, n_components=2, random_state=None, init=None):
     N = D.shape[0]
     D = squareform(D)
     # Metric MDS from s_gd2
-    Y = s_gd2.mds_direct(N, D, init=init, random_seed=random_state)
-    return Y
 
+    Y = s_gd2.mds_direct(N, D, init=init, random_seed=random_state, **mds_kwargs)
+    return Y
 
 def smacof(
     D,
@@ -157,6 +157,7 @@ def embed_MDS(
     n_jobs=1,
     seed=None,
     verbose=0,
+    **mds_kwargs
 ):
     """Performs classic, metric, and non-metric MDS
 
@@ -227,7 +228,7 @@ def embed_MDS(
     if solver == "sgd":
         try:
             # use sgd2 if it is available
-            Y = sgd(X_dist, n_components=ndim, random_state=seed, init=Y_classic)
+            Y = sgd(X_dist, n_components=ndim, random_state=seed, init=Y_classic, **mds_kwargs)
             if np.any(~np.isfinite(Y)):
                 _logger.warning("Using SMACOF because SGD returned NaN")
                 raise NotImplementedError
