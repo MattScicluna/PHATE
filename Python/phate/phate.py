@@ -179,6 +179,7 @@ class PHATE(BaseEstimator):
         n_jobs=1,
         random_state=None,
         verbose=1,
+        graphtools_backend='sklearn',
         **kwargs
     ):
         if "k" in kwargs:
@@ -201,6 +202,7 @@ class PHATE(BaseEstimator):
         self.mds_dist = mds_dist
         self.mds_solver = mds_solver
         self.random_state = random_state
+        self.graphtools_backend = graphtools_backend
         self.kwargs = kwargs
 
         self.graph = None
@@ -835,6 +837,7 @@ class PHATE(BaseEstimator):
                     n_jobs=self.n_jobs,
                     verbose=self.verbose,
                     random_state=self.random_state,
+                    backend=self.graphtools_backend,
                     **(self.kwargs)
                 )
 
