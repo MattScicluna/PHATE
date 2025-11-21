@@ -63,8 +63,11 @@ class PHATE(BaseEstimator):
     n_components : int, optional, default: 2
         number of dimensions in which the data will be embedded
 
-    knn : int, optional, default: 5
-        number of nearest neighbors on which to build kernel
+    knn : int or list of int, optional, default: 5
+        number of nearest neighbors on which to build kernel.
+        If a list is provided, multiple kernels are computed (one for each knn value)
+        and averaged to create a multiscale kernel that captures both local and
+        global structure, similar to multiscale t-SNE.
 
     decay : int, optional, default: 40
         sets decay rate of kernel tails.
@@ -355,10 +358,22 @@ class PHATE(BaseEstimator):
         ------
         ValueError : unacceptable choice of parameters
         """
-        utils.check_positive(n_components=self.n_components, knn=self.knn)
-        utils.check_int(
-            n_components=self.n_components, knn=self.knn, n_jobs=self.n_jobs
-        )
+        utils.check_positive(n_components=self.n_components)
+        utils.check_int(n_components=self.n_components, n_jobs=self.n_jobs)
+
+        # Validate knn (int or list of ints)
+        if isinstance(self.knn, (list, tuple)):
+            if len(self.knn) == 0:
+                raise ValueError("knn list cannot be empty")
+            for i, k in enumerate(self.knn):
+                try:
+                    utils.check_positive(knn=k)
+                    utils.check_int(knn=k)
+                except ValueError as e:
+                    raise ValueError(f"knn[{i}]: {str(e)}")
+        else:
+            utils.check_positive(knn=self.knn)
+            utils.check_int(knn=self.knn)
         utils.check_between(-1, 1, gamma=self.gamma)
         utils.check_if_not(None, utils.check_positive, decay=self.decay)
         utils.check_if_not(

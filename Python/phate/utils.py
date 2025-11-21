@@ -5,13 +5,28 @@ import numpy as np
 def check_positive(**params):
     """Check that parameters are positive as expected
 
+    Supports both single numbers and lists/tuples of numbers.
+    For lists/tuples, all elements must be positive.
+
     Raises
     ------
     ValueError : unacceptable choice of parameters
     """
     for p in params:
-        if not isinstance(params[p], numbers.Number) or params[p] <= 0:
-            raise ValueError("Expected {} > 0, got {}".format(p, params[p]))
+        value = params[p]
+
+        # Handle lists/tuples of numbers
+        if isinstance(value, (list, tuple)):
+            if len(value) == 0:
+                raise ValueError("Expected {} to be non-empty, got {}".format(p, value))
+            for i, elem in enumerate(value):
+                if not isinstance(elem, numbers.Number) or elem <= 0:
+                    raise ValueError(
+                        "Expected all elements of {} > 0, got {} at index {}".format(p, elem, i)
+                    )
+        # Handle single numbers
+        elif not isinstance(value, numbers.Number) or value <= 0:
+            raise ValueError("Expected {} > 0, got {}".format(p, value))
 
 
 def check_int(**params):

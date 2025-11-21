@@ -622,6 +622,88 @@ def test_phate_verbose():
 
 
 #####################################################
+# Test 21: Multiscale Kernel
+#####################################################
+
+
+def test_multiscale_kernel():
+    """Test PHATE with multiscale kernel (multiple knn values)"""
+    print("\n=== Test 21: Multiscale Kernel ===")
+
+    # Generate test data
+    data, clusters = tree.gen_dla(n_dim=50, n_branch=5, branch_length=50, seed=42)
+
+    # Test with multiscale knn
+    phate_op_multi = phate.PHATE(
+        knn=[5, 50], decay=40, t=10, n_components=2, verbose=False
+    )
+    embedding_multi = phate_op_multi.fit_transform(data)
+
+    # Verify output shape
+    assert embedding_multi.shape == (
+        data.shape[0],
+        2,
+    ), f"Expected shape {(data.shape[0], 2)}, got {embedding_multi.shape}"
+
+    # Verify no NaN or inf values
+    assert np.all(np.isfinite(embedding_multi)), "Embedding contains NaN or inf values"
+
+    # Test with single scale for comparison
+    phate_op_single = phate.PHATE(
+        knn=5, decay=40, t=10, n_components=2, verbose=False
+    )
+    embedding_single = phate_op_single.fit_transform(data)
+
+    # Embeddings should be different (multiscale captures different structure)
+    assert not np.allclose(
+        embedding_multi, embedding_single
+    ), "Multiscale and single scale embeddings should differ"
+
+    # Test with three scales
+    phate_op_three = phate.PHATE(
+        knn=[3, 10, 30], decay=40, t=10, n_components=2, verbose=False
+    )
+    embedding_three = phate_op_three.fit_transform(data)
+    assert embedding_three.shape == (data.shape[0], 2)
+    assert np.all(np.isfinite(embedding_three))
+
+    # Test that knn=[5] works same as knn=5
+    phate_op_list_single = phate.PHATE(
+        knn=[5], decay=40, t=10, n_components=2, verbose=False
+    )
+    embedding_list_single = phate_op_list_single.fit_transform(data)
+    # Should be very close (same kernel, slight numerical differences possible)
+    assert np.allclose(embedding_single, embedding_list_single, atol=1e-5)
+
+    print("✓ Test 21 PASSED\n")
+
+
+def test_multiscale_kernel_validation():
+    """Test parameter validation for multiscale kernel"""
+    print("\n=== Test 21b: Multiscale Kernel Validation ===")
+
+    data, _ = tree.gen_dla(n_dim=50, n_branch=5, branch_length=50, seed=42)
+
+    # Test empty list raises error
+    try:
+        phate_op = phate.PHATE(knn=[], decay=40)
+        phate_op.fit(data)
+        assert False, "Expected ValueError for empty knn list"
+    except ValueError as e:
+        assert "empty" in str(e).lower()
+
+    # Test invalid type in list raises error
+    try:
+        phate_op = phate.PHATE(knn=[5, 10.5], decay=40)
+        phate_op.fit(data)
+        assert False, "Expected ValueError for non-integer knn value"
+    except ValueError:
+        pass  # Expected
+
+    print("✓ Test 21b PASSED\n")
+
+
+#####################################################
 # Run all tests
 #####################################################
 
